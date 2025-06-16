@@ -1,7 +1,5 @@
 
-# Building Tables in R
-
-## Approaches in creating a table in R
+# Load and Prepare packages, data
 
 - Use `tabyl()` from the `janitor` package to produce and desing tabulations and cross-tabulations.
 
@@ -64,18 +62,20 @@ summary(linelist$age_years)[["1st Qu."]]
 
 
 ```{r}
-linelist %>% 
+linelist |> 
   get_summary_stats(
     age, wt_kg, ht_cm, ct_blood, temp,  # columns to calculate for
     type = "common")                    # summary stats to return
 ```
+
+## Janitor package
 
 ```{r}
 linelist |> tabyl(age_cat)
 ```
 
 ```{r}
-linelist %>% tabyl(age_cat, gender)
+linelist |> tabyl(age_cat, gender)
 ```
 
 Function	Outcome
@@ -87,8 +87,8 @@ Function	Outcome
 - adorn_title() - Add string via arguments row_name = and/or col_name =
 
 ```{r}
-linelist %>%               # case linelist
-  tabyl(age_cat) %>%       # tabulate counts and proportions by age category
+linelist |>               # case linelist
+  tabyl(age_cat) |>       # tabulate counts and proportions by age category
   adorn_pct_formatting()   # convert proportions to percents
 ```
 
@@ -101,12 +101,12 @@ linelist |>
 ```
 
 ```{r}
-linelist %>%                                  # case linelist
-  tabyl(age_cat, gender) %>%                  # cross-tabulate counts
-  adorn_totals(where = "row") %>%             # add a total row
-  adorn_percentages(denominator = "col") %>%  # convert to proportions
-  adorn_pct_formatting() %>%                  # convert to percents
-  adorn_ns(position = "front") %>%            # display as: "count (percent)"
+linelist |>                                  # case linelist
+  tabyl(age_cat, gender) |>                  # cross-tabulate counts
+  adorn_totals(where = "row") |>             # add a total row
+  adorn_percentages(denominator = "col") |>  # convert to proportions
+  adorn_pct_formatting() |>                  # convert to percents
+  adorn_ns(position = "front") |>            # display as: "count (percent)"
   adorn_title(                                # adjust titles
     row_name = "Age Category",
     col_name = "Gender")
@@ -114,17 +114,17 @@ linelist %>%                                  # case linelist
 
 
 ```{r}
-linelist %>%
-  tabyl(age_cat, gender) %>% 
-  adorn_totals(where = "col") %>% 
-  adorn_percentages(denominator = "col") %>% 
-  adorn_pct_formatting() %>% 
-  adorn_ns(position = "front") %>% 
+linelist |>
+  tabyl(age_cat, gender) |> 
+  adorn_totals(where = "col") |> 
+  adorn_percentages(denominator = "col") |> 
+  adorn_pct_formatting() |> 
+  adorn_ns(position = "front") |> 
   adorn_title(
     row_name = "Age Category",
     col_name = "Gender",
-    placement = "combined") %>% # this is necessary to print as image
-  flextable::flextable() %>%    # convert to pretty image
+    placement = "combined") |> # this is necessary to print as image
+  flextable::flextable() |>    # convert to pretty image
   flextable::autofit()          # format to one line per row 
 ```
 
@@ -133,8 +133,8 @@ linelist %>%
 ```{r}
 # you can use janitor adorn with other functions created from summarise() and count() from dplyr or table() from base R
 
-linelist %>% 
-  count(hospital) %>%   # dplyr function
+linelist |> 
+  count(hospital) |>   # dplyr function
   adorn_totals()        # janitor function
 ```
 
@@ -158,10 +158,10 @@ linelist |>
   flextable::save_as_docx(path = "tabyl.docx")   # save as Word document to filepath
 ```
 
-## Statistics Tables
+
 
 ```{r}
-age_by_outcome <- linelist %>% 
+age_by_outcome <- linelist |> 
   tabyl(age_cat, outcome, show_na = FALSE) 
 
 # not missing values are not allowed, they are suppressed using show_na = FALSE
@@ -169,7 +169,7 @@ age_by_outcome <- linelist %>%
 chisq.test(age_by_outcome)
 ```
 
-# dplyr
+## dplyr package
 
 ```{r}
 # get counts
@@ -178,34 +178,34 @@ linelist |>
 ```
 
 ```{r}
-linelist %>% 
-  group_by(age_cat) %>%     # group data by unique values in column age_cat
+linelist |> 
+  group_by(age_cat) |>     # group data by unique values in column age_cat
   summarise(n_rows = n())   # return number of rows *per group*
 
 #or
 
-linelist %>% 
+linelist |> 
   count(age_cat)
 
 # to change the name use
 
-linelist %>% 
+linelist |> 
   count(age_cat, name = "count")
 ```
 
 ```{r}
-linelist %>% 
+linelist |> 
   count(age_cat, outcome)
 
 # to show all levels, use .drop = FALSE
-linelist %>% 
+linelist |> 
   count(age_cat, outcome, .drop = FALSE)
 ```
 
 ```{r}
 # create proportion
-age_summary <- linelist %>% 
-  count(age_cat) %>%                     # group and count by gender (produces "n" column)
+age_summary <- linelist |> 
+  count(age_cat) |>                     # group and count by gender (produces "n" column)
   mutate(                                # create percent of column - note the denominator
     percent = scales::percent(n / sum(n))) 
 
@@ -215,17 +215,16 @@ age_summary
 
 ```{r}
 # calculate proportions withing group
-age_by_outcome <- linelist %>%                  # begin with linelist
-  group_by(outcome) %>%                         # group by outcome 
-  count(age_cat) %>%                            # group and count by age_cat, and then remove age_cat grouping
+age_by_outcome <- linelist |>                  # begin with linelist
+  group_by(outcome) |>                         # group by outcome 
+  count(age_cat) |>                            # group and count by age_cat, and then remove age_cat grouping
   mutate(percent = scales::percent(n / sum(n))) # calculate percent - note the denominator is by outcome group
 ```
 
-## Plotting
 
 ```{r}
-linelist %>%                      # begin with linelist
-  count(age_cat, outcome) %>%     # group and tabulate counts by two columns
+linelist |>                      # begin with linelist
+  count(age_cat, outcome) |>     # group and tabulate counts by two columns
   ggplot()+                       # pass new data frame to ggplot
     geom_col(                     # create bar plot
       mapping = aes(   
@@ -234,12 +233,12 @@ linelist %>%                      # begin with linelist
         y = n))                   # map the counts column `n` to the height
 ```
 
-## Summary Statistics
+
 
 ```{r}
 # Use summarise with various statistical functions 
-summary_table <- linelist %>%                                        # begin with linelist, save out as new object
-  group_by(hospital) %>%                                             # group all calculations by hospital
+summary_table <- linelist |>                                        # begin with linelist, save out as new object
+  group_by(hospital) |>                                             # group all calculations by hospital
   summarise(                                                         # only the below summary columns will be returned
     cases       = n(),                                                # number of rows per group
     delay_max   = max(days_onset_hosp, na.rm = T),                    # max delay
@@ -255,8 +254,8 @@ summary_table  # print
 
 ```{r}
 # in the summarise statistics use conditions
-linelist %>% 
-  group_by(hospital) %>% 
+linelist |> 
+  group_by(hospital) |> 
   summarise(
     max_temp_fvr = max(temp[fever == "yes"], na.rm = T),
     max_temp_no = max(temp[fever == "no"], na.rm = T)
@@ -266,10 +265,10 @@ linelist %>%
 
 ```{r}
 # glue columns together
-summary_table %>% 
-  mutate(delay = str_glue("{delay_mean} ({delay_sd})")) %>%  # combine and format other values
-  select(-c(delay_mean, delay_sd)) %>%                       # remove two old columns   
-  adorn_totals(where = "row") %>%                            # add total row
+summary_table |> 
+  mutate(delay = str_glue("{delay_mean} ({delay_sd})")) |>  # combine and format other values
+  select(-c(delay_mean, delay_sd)) |>                       # remove two old columns   
+  adorn_totals(where = "row") |>                            # add total row
   select(                                                    # order and rename cols
     "Hospital Name"   = hospital,
     "Cases"           = cases,
@@ -283,14 +282,14 @@ summary_table %>%
 ```{r}
 # percentiles
 # get default percentile values of age (0%, 25%, 50%, 75%, 100%)
-linelist %>% 
+linelist |> 
   summarise(age_percentiles = quantile(age_years, na.rm = TRUE))
 ```
 
 ```{r}
 # manually specified percentile values of age
 # get manually-specified percentile values of age (5%, 50%, 75%, 98%)
-linelist %>% 
+linelist |> 
   summarise(
     age_percentiles = quantile(
       age_years,
@@ -301,8 +300,8 @@ linelist %>%
 
 ```{r}
 # get manually-specified percentile values of age (5%, 50%, 75%, 98%)
-linelist %>% 
-  group_by(hospital) %>% 
+linelist |> 
+  group_by(hospital) |> 
   summarise(
     p05 = quantile(age_years, probs = 0.05, na.rm=T),
     p50 = quantile(age_years, probs = 0.5, na.rm=T),
@@ -313,21 +312,21 @@ linelist %>%
 
 ```{r}
 # you can also try
-linelist %>% 
-  group_by(hospital) %>% 
+linelist |> 
+  group_by(hospital) |> 
   rstatix::get_summary_stats(age, type = "quantile")
 ```
 
 ```{r}
 # to summarise aggregated data
-linelist_agg <- linelist %>% 
-  drop_na(gender, outcome) %>% 
+linelist_agg <- linelist |> 
+  drop_na(gender, outcome) |> 
   count(outcome, gender)
 
 linelist_agg
 
-linelist_agg %>% 
-  group_by(outcome) %>% 
+linelist_agg |> 
+  group_by(outcome) |> 
   summarise(
     total_cases  = sum(n, na.rm=T),
     male_cases   = sum(n[gender == "m"], na.rm=T),
@@ -336,8 +335,8 @@ linelist_agg %>%
 
 ```{r}
 # summarise across multiple columns
-linelist %>% 
-  group_by(outcome) %>% 
+linelist |> 
+  group_by(outcome) |> 
   summarise(across(.cols = c(age_years, temp, wt_kg, ht_cm),  # columns
                    .fns = mean,                               # function
                    na.rm=T))                                  # extra arguments
@@ -362,8 +361,8 @@ linelist %>%
 any_of(date_onset, date_death, cardiac_arrest)
 
 ```{r}
-linelist %>% 
-  group_by(outcome) %>% 
+linelist |> 
+  group_by(outcome) |> 
   summarise(across(
     .cols = where(is.numeric),  # all numeric columns in the data frame
     .fns = mean,
@@ -373,37 +372,37 @@ linelist %>%
 ```{r}
 # convert long table to wider table 
 
-age_by_outcome <- linelist %>%                  # begin with linelist
-  group_by(outcome) %>%                         # group by outcome 
-  count(age_cat) %>%                            # group and count by age_cat, and then remove age_cat grouping
+age_by_outcome <- linelist |>                  # begin with linelist
+  group_by(outcome) |>                         # group by outcome 
+  count(age_cat) |>                            # group and count by age_cat, and then remove age_cat grouping
   mutate(percent = scales::percent(n / sum(n))) # calculate percent - note the denominator is by outcome group
 
 
-age_by_outcome %>% 
-  select(-percent) %>%   # keep only counts for simplicity
+age_by_outcome |> 
+  select(-percent) |>   # keep only counts for simplicity
   pivot_wider(names_from = age_cat, values_from = n)  
 ```
 ```{r}
 # number of cases with known outcome, deaths, and recovered.
-linelist %>% 
-  group_by(gender) %>%
+linelist |> 
+  group_by(gender) |>
   summarise(
     known_outcome = sum(!is.na(outcome)),           # Number of rows in group where outcome is not missing
     n_death  = sum(outcome == "Death", na.rm=T),    # Number of rows in group where outcome is Death
     n_recover = sum(outcome == "Recover", na.rm=T), # Number of rows in group where outcome is Recovered
-  ) %>% 
-  adorn_totals() %>%                                # Adorn total row (sums of each numeric column)
-  adorn_percentages("col") %>%                      # Get column proportions
-  adorn_pct_formatting() %>%                        # Convert proportions to percents
+  ) |> 
+  adorn_totals() |>                                # Adorn total row (sums of each numeric column)
+  adorn_percentages("col") |>                      # Get column proportions
+  adorn_pct_formatting() |>                        # Convert proportions to percents
   adorn_ns(position = "front")                      # display % and counts (with counts in front)
 ```
 
 ```{r}
 # outcome by hospital with group_by() and summarise()
 
-by_hospital <- linelist %>% 
-  filter(!is.na(outcome) & hospital != "Missing") %>%  # Remove cases with missing outcome or hospital
-  group_by(hospital, outcome) %>%                      # Group data
+by_hospital <- linelist |> 
+  filter(!is.na(outcome) & hospital != "Missing") |>  # Remove cases with missing outcome or hospital
+  group_by(hospital, outcome) |>                      # Group data
   summarise(                                           # Create new summary columns of indicators of interest
     N = n(),                                            # Number of rows per hospital-outcome group     
     ct_value = median(ct_blood, na.rm=T))               # median CT value per group
@@ -412,9 +411,9 @@ by_hospital # print table
 ```
 
 ```{r}
-totals <- linelist %>% 
-      filter(!is.na(outcome) & hospital != "Missing") %>%
-      group_by(outcome) %>%                            # Grouped only by outcome, not by hospital    
+totals <- linelist |> 
+      filter(!is.na(outcome) & hospital != "Missing") |>
+      group_by(outcome) |>                            # Grouped only by outcome, not by hospital    
       summarise(
         N = n(),                                       # These statistics are now by outcome only     
         ct_value = median(ct_blood, na.rm=T))
@@ -423,29 +422,29 @@ totals # print table
 ```
 
 ```{r}
-table_long <- bind_rows(by_hospital, totals) %>% 
+table_long <- bind_rows(by_hospital, totals) |> 
   mutate(hospital = replace_na(hospital, "Total"))
 table_long
 ```
 
 ```{r}
 # make table wider
-table_long %>% 
+table_long |> 
   
   # Pivot wider and format
   ########################
-  mutate(hospital = replace_na(hospital, "Total")) %>% 
+  mutate(hospital = replace_na(hospital, "Total")) |> 
   pivot_wider(                                         # Pivot from long to wide
     values_from = c(ct_value, N),                       # new values are from ct and count columns
-    names_from = outcome) %>%                           # new column names are from outcomes
+    names_from = outcome) |>                           # new column names are from outcomes
   mutate(                                              # Add new columns
     N_Known = N_Death + N_Recover,                               # number with known outcome
     Pct_Death = scales::percent(N_Death / N_Known, 0.1),         # percent cases who died (to 1 decimal)
-    Pct_Recover = scales::percent(N_Recover / N_Known, 0.1)) %>% # percent who recovered (to 1 decimal)
+    Pct_Recover = scales::percent(N_Recover / N_Known, 0.1)) |> # percent who recovered (to 1 decimal)
   select(                                              # Re-order columns
     hospital, N_Known,                                   # Intro columns
     N_Recover, Pct_Recover, ct_value_Recover,            # Recovered columns
-    N_Death, Pct_Death, ct_value_Death)  %>%             # Death columns
+    N_Death, Pct_Death, ct_value_Death)  |>             # Death columns
   arrange(N_Known)                                  # Arrange rows from lowest to highest (Total row at bottom)
 ```
 
@@ -453,13 +452,86 @@ table_long %>%
 
 ```{r}
 # make a simple descriptive table
-linelist %>% 
-  select(age_years, gender, outcome, fever, temp, hospital) %>%  # keep only the columns of interest
+linelist |> 
+  select(age_years, gender, outcome, fever, temp, hospital) |>  # keep only the columns of interest
   tbl_summary()                                                  # default
 ```
 
 ```{r}
-# Adjustments
+# select a particular statistical test
+linelist |> 
+  select(age_years) |>         # keep only columns of interest 
+  tbl_summary(                  # create summary table
+    statistic = age_years ~ "{mean}") # print mean of age
 
+# specify only minimum and maximum
+linelist |> 
+  select(age_years) |>                       # keep only columns of interest 
+  tbl_summary(                                # create summary table
+    statistic = age_years ~ "({min}, {max})") # print min and max of age
+```
+
+```{r}
+# modify the original summary table
+linelist |> 
+  select(age_years, gender, outcome, fever, temp, hospital) |> # keep only columns of interest
+  tbl_summary(     
+    by = outcome,                                               # stratify entire table by outcome
+    statistic = list(all_continuous() ~ "{mean} ({sd})",        # stats and format for continuous columns
+                     all_categorical() ~ "{n} / {N} ({p}%)"),   # stats and format for categorical columns
+    digits = all_continuous() ~ 1,                              # rounding for continuous columns
+    type   = all_categorical() ~ "categorical",                 # force all categorical levels to display
+    label  = list(                                              # display labels for column names
+      age_years ~ "Age (years)",
+      gender    ~ "Gender",
+      temp      ~ "Temperature",
+      hospital  ~ "Hospital"),
+    missing_text = "Missing"                                    # how missing values should display
+  )
+```
+
+```{r}
+# Apply multi - line stats for continuos variables
+linelist |> 
+  select(age_years, temp) |>                      # keep only columns of interest
+  tbl_summary(                                     # create summary table
+    type = all_continuous() ~ "continuous2",       # indicate that you want to print multiple statistics 
+    statistic = all_continuous() ~ c(
+      "{mean} ({sd})",                             # line 1: mean and SD
+      "{median} ({p25}, {p75})",                   # line 2: median and IQR
+      "{min}, {max}")                              # line 3: min and max
+    )
+```
+
+# Base R
+
+```{r}
+table(linelist$outcome, useNA = "always")
+```
+
+```{r}
+age_by_outcome <- table(linelist$age_cat, linelist$outcome, useNA = "always") # save table as object
+age_by_outcome   # print table
+```
+
+```{r}
+# get proportions of table defined above, by rows, rounded
+prop.table(age_by_outcome, 1) |> round(2)
+
+# the margins argument let's you specify if the proprotions is of rows or columns
+```
+
+```{r}
+addmargins(age_by_outcome)
+```
+
+```{r}
+# convert the table to a dataframe
+
+table(fct_explicit_na(linelist$age_cat), fct_explicit_na(linelist$outcome)) |> 
+  addmargins() |> 
+  as.data.frame.matrix() |> 
+  tibble::rownames_to_column(var = "Age Category") |> 
+  flextable::flextable()
 ```
 

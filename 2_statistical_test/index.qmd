@@ -1,0 +1,173 @@
+
+
+```{r}
+pacman::p_load(
+  rio,          # File import
+  here,         # File locator
+  skimr,        # get overview of data
+  tidyverse,    # data management + ggplot2 graphics, 
+  gtsummary,    # summary statistics and tests
+  rstatix,      # statistics
+  corrr,        # correlation analysis for numeric variables
+  janitor,      # adding totals and percents to tables
+  flextable     # converting tables to HTML
+  )
+```
+
+
+```{r}
+# import the linelist
+linelist <- import("linelist_cleaned.rds")
+```
+
+
+## Base R
+
+```{r}
+# Base R outputs are simple and harder to put in tables
+
+# t-test
+
+## compare mean temp across gender with a t-test
+
+t.test(temp ~ gender, data = linelist)
+
+# t.test(df1$temp, df2$temp)
+
+t.test(linelist$temp, mu = 45)
+```
+
+
+```{r}
+# shapiro wilk test
+shapiro.test(head(linelist,500)$temp)
+```
+
+```{r}
+## compare temperature distribution by outcome group with a wilcox test
+wilcox.test(temp ~ outcome, data = linelist)
+```
+
+```{r}
+## compare age distribution by outcome group with a kruskal-wallis test
+kruskal.test(temp ~ outcome, linelist)
+```
+
+```{r}
+## compare the proportions in each group with a chi-squared test
+chisq.test(linelist$gender, linelist$outcome)
+```
+
+## rstatix
+
+```{r}
+linelist |>
+  rstatix::get_summary_stats(bmi, temp)
+```
+
+```{r}
+# use type argument to specify subset of summary statistics to use
+linelist |>
+  group_by(hospital) |>
+  rstatix::get_summary_stats(bmi, temp, type = "common")
+```
+
+```{r}
+# test
+linelist |> 
+  t_test(temp ~ gender)
+```
+
+```{r}
+linelist |> 
+  t_test(temp ~ 1, mu = 30)
+```
+
+
+```{r}
+linelist |> 
+  group_by(gender) |> 
+  t_test(temp ~ 1, mu = 18)
+```
+
+```{r}
+linelist |> 
+  head(500) |>            # first 500 rows of case linelist
+  shapiro_test(temp)
+```
+
+```{r}
+linelist |> 
+  wilcox_test(temp ~ gender)
+```
+
+```{r}
+linelist |> 
+  kruskal_test(temp ~ outcome)
+```
+
+```{r}
+linelist |> 
+  tabyl(gender, outcome) |> 
+  select(-1) |> 
+  chisq_test()
+```
+
+## gtsummary
+
+```{r}
+linelist |> 
+  select(gender, outcome) |>    # keep variables of interest
+  tbl_summary(by = outcome) |>  # produce summary table and specify grouping variable
+  add_p()                        # specify what test to perform
+```
+
+```{r}
+linelist |> 
+  select(temp, outcome) |>             # keep variables of interest
+  tbl_summary(                               # produce summary table
+    statistic = temp ~ "{mean} ({sd})", # specify what statistics to show
+    by = outcome) |>                        # specify the grouping variable
+  add_p(temp ~ "t.test")                # specify what tests to perform
+```
+
+```{r}
+linelist |> 
+  select(temp, outcome) |>                       # keep variables of interest
+  tbl_summary(                                         # produce summary table
+    statistic = temp ~ "{median} ({p25}, {p75})", # specify what statistic to show (this is default so could remove)
+    by = outcome) |>                                  # specify the grouping variable
+  add_p(temp ~ "wilcox.test")                     # specify what test to perform (default so could leave brackets empty)
+```
+
+```{r}
+linelist |> 
+  select(temp, outcome) |>                       # keep variables of interest
+  tbl_summary(                                         # produce summary table
+    statistic = temp ~ "{median} ({p25}, {p75})", # specify what statistic to show (default, so could remove)
+    by = outcome) |>                                  # specify the grouping variable
+  add_p(temp ~ "kruskal.test")                    # specify what test to perform
+```
+
+## Correlations
+
+```{r}
+correlation_tab <- linelist |> 
+  select(generation, age, ct_blood, days_onset_hosp, wt_kg, ht_cm) |>   # keep numeric variables of interest
+  correlate()      # create correlation table (using default pearson)
+
+correlation_tab    # print
+```
+```{r}
+## remove duplicate entries (the table above is mirrored) 
+correlation_tab <- correlation_tab |> 
+  shave()
+
+## view correlation table 
+correlation_tab
+```
+```{r}
+## plot correlations 
+rplot(correlation_tab)
+```
+

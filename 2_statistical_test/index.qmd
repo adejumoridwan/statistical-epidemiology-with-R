@@ -153,10 +153,10 @@ linelist |>
 
 ```{r}
 correlation_tab <- linelist |> 
-  select(generation, age, ct_blood, days_onset_hosp, wt_kg, ht_cm) |>   # keep numeric variables of interest
-  correlate()      # create correlation table (using default pearson)
+  select(generation, age, ct_blood, days_onset_hosp, wt_kg, ht_cm) |>   
+  correlate()      
 
-correlation_tab    # print
+correlation_tab   
 ```
 ```{r}
 ## remove duplicate entries (the table above is mirrored) 

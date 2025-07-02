@@ -129,6 +129,7 @@ all_data <- left_join(country_data, standard_pop_clean, by=c("age_cat5", "Sex"))
 all_data
 ```
 
+
 ## Using the dsr package
 
 - can only calculate direct standardized rates
@@ -202,6 +203,22 @@ mortality_ds_rate_phe
 
 ### Indirectly standardized rates
 ```{r}
+# Create reference population
+refpopCountryB <- country_data %>% 
+  filter(Country == "B") 
 
+# Calculate rates for country A indirectly standardized by age and sex
+mortality_is_rate_phe_A <- country_data %>%
+     filter(Country == "A") %>%
+     PHEindicatormethods::calculate_ISRate(
+          x = Deaths,                 # column with observed number of events
+          n = Population,             # column with non-standard pops for each stratum
+          x_ref = refpopCountryB$Deaths,  # reference number of deaths for each stratum
+          n_ref = refpopCountryB$Population)  # reference population for each stratum
+
+# Print table
+mortality_is_rate_phe_A
 ```
+
+
 

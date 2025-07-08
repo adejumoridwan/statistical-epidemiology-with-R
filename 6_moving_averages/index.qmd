@@ -56,6 +56,66 @@ head(rolling)
 ggplot(data = rolling)+
   geom_line(mapping = aes(x = date_hospitalisation, y = indexed_7day), size = 1)
 ```
+```{r}
+# slidign window by group
+grouped_roll <- linelist %>%
+
+  count(hospital, date_hospitalisation, name = "new_cases") %>% 
+
+  arrange(hospital, date_hospitalisation) %>%   # arrange rows by hospital and then by date
+  
+  group_by(hospital) %>%              # group by hospital 
+    
+  mutate(                             # rolling average  
+    mean_7day_hosp = slide_index_dbl(
+      .x = new_cases,                 # the count of cases per hospital-day
+      .i = date_hospitalisation,      # index on date of admission
+      .f = mean,                      # use mean()                   
+      .before = days(6)               # use the day and the 6 days prior
+      )
+  )
+grouped_roll
+```
+
+```{r}
+ggplot(data = grouped_roll)+
+  geom_col(                       # plot daly case counts as grey bars
+    mapping = aes(
+      x = date_hospitalisation,
+      y = new_cases),
+    fill = "grey",
+    width = 1)+
+  geom_line(                      # plot rolling average as line colored by hospital
+    mapping = aes(
+      x = date_hospitalisation,
+      y = mean_7day_hosp,
+      color = hospital),
+    size = 1)+
+  facet_wrap(~hospital, ncol = 2)+ # create mini-plots per hospital
+  theme_classic()+                 # simplify background  
+  theme(legend.position = "none")+ # remove legend
+  labs(                            # add plot labels
+    title = "7-day rolling average of daily case incidence",
+    x = "Date of admission",
+    y = "Case incidence")
+```
 
 
 ## Calculate with tidyquant within ggplot()
+
+```{r}
+linelist %>% 
+  count(date_onset) %>%                 # count cases per day
+  drop_na(date_onset) %>%               # remove cases missing onset date
+  ggplot(aes(x = date_onset, y = n))+   # start ggplot
+    geom_line(                          # plot raw values
+      size = 1,
+      alpha = 0.2                       # semi-transparent line
+      )+             
+    tidyquant::geom_ma(                 # plot moving average
+      n = 7,           
+      size = 1,
+      color = "blue")+ 
+  theme_minimal()                       # simple background
+```
+
